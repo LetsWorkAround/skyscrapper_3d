@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5x5x5 3D Block Stacking (10-second Interval)</title>
+    <title>5x5x5 3D Block Stacking with Column-based Colors (10-second Interval)</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -11,15 +11,36 @@
 </head>
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
     <script>
         let scene, camera, renderer, cubes = [];
         const size = 5;
-        const pastelColors = [
-            0xFFB3BA, // Light Pink (1층)
-            0xFFDFBA, // Light Peach (2층)
-            0xFFFFBA, // Light Yellow (3층)
-            0xBAFFBA, // Light Mint (4층)
-            0xBAE1FF  // Light Blue (5층)
+        const columnColors = [
+            0xFF6B6B, // Coral Red
+            0x4ECDC4, // Caribbean Green
+            0xFFD93D, // Sunglow
+            0x6BCB77, // Mantis Green
+            0x4A90E2, // Picton Blue
+            0xF8A5C2, // Carnation Pink
+            0x9B59B6, // Amethyst
+            0xF39C12, // Orange
+            0x3498DB, // Curious Blue
+            0x2ECC71, // Emerald
+            0xE74C3C, // Cinnabar
+            0x1ABC9C, // Mountain Meadow
+            0xD35400, // Persimmon
+            0x8E44AD, // Studio
+            0x27AE60, // Nephritis
+            0xF1C40F, // Buttercup
+            0x16A085, // Green Haze
+            0xE67E22, // Carrot Orange
+            0x2980B9, // Curious Blue
+            0x95A5A6, // Pewter
+            0xC0392B, // Thunderbird
+            0x34495E, // Pickled Bluewood
+            0x7F8C8D, // Oslo Gray
+            0xD35400, // Pumpkin
+            0x2C3E50  // Madison
         ];
 
         function init() {
@@ -33,16 +54,20 @@
             light.position.set(10, 10, 10);
             scene.add(light);
 
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
 
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
             for (let x = 0; x < size; x++) {
                 for (let z = 0; z < size; z++) {
                     cubes[x] = cubes[x] || [];
                     cubes[x][z] = [];
+                    const colorIndex = x * size + z;
+                    const material = new THREE.MeshPhongMaterial({ color: columnColors[colorIndex] });
                     for (let y = 0; y < size; y++) {
-                        const material = new THREE.MeshPhongMaterial({ color: pastelColors[y] });
                         const cube = new THREE.Mesh(geometry, material);
                         cube.position.set(x - size/2 + 0.5, y - size/2 + 0.5, z - size/2 + 0.5);
+                        cube.scale.y = 0.01; // Start with a very small height
                         cube.visible = false;
                         scene.add(cube);
                         cubes[x][z][y] = cube;
@@ -54,8 +79,9 @@
             camera.lookAt(0, 0, 0);
         }
 
-        function animate() {
+        function animate(time) {
             requestAnimationFrame(animate);
+            TWEEN.update(time);
             renderer.render(scene, camera);
         }
 
@@ -83,22 +109,60 @@
             return square;
         }
 
-        function stackBlocks() {
+        function animateBlock(cube, toScale, delay) {
+            return new Promise((resolve) => {
+                new TWEEN.Tween(cube.scale)
+                    .to({ y: toScale }, 500)
+                    .delay(delay)
+                    .easing(TWEEN.Easing.Elastic.Out)
+                    .onComplete(resolve)
+                    .start();
+            });
+        }
+
+        async function stackBlocks() {
             const heights = generateLatinSquare();
+            const promises = [];
+
+            // First, animate all blocks to disappear
+            for (let x = 0; x < size; x++) {
+                for (let z = 0; z < size; z++) {
+                    for (let y = 0; y < size; y++) {
+                        const cube = cubes[x][z][y];
+                        if (cube.visible) {
+                            promises.push(animateBlock(cube, 0.01, y * 50));
+                        }
+                    }
+                }
+            }
+
+            await Promise.all(promises);
+            promises.length = 0;
+
+            // Then, animate new blocks to appear
             for (let x = 0; x < size; x++) {
                 for (let z = 0; z < size; z++) {
                     const height = heights[x][z];
                     for (let y = 0; y < size; y++) {
-                        cubes[x][z][y].visible = y < height;
+                        const cube = cubes[x][z][y];
+                        if (y < height) {
+                            cube.visible = true;
+                            cube.scale.y = 0.01;
+                            promises.push(animateBlock(cube, 1, y * 50));
+                        } else {
+                            cube.visible = false;
+                        }
                     }
                 }
             }
+
+            await Promise.all(promises);
         }
 
         init();
         animate();
         stackBlocks();
-        setInterval(stackBlocks, 10000); // 변경된 부분: 3000에서 10000으로 수정
+        setInterval(stackBlocks, 10000);
 
         window.addEventListener('resize', function() {
             camera.aspect = window.innerWidth / window.innerHeight;
