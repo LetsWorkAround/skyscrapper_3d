@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5x5x5 3D Block Stacking (Pastel Colors)</title>
+    <title>5x5x5 3D Block Stacking (10-second Interval)</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -98,7 +98,7 @@
         init();
         animate();
         stackBlocks();
-        setInterval(stackBlocks, 3000);
+        setInterval(stackBlocks, 10000); // 변경된 부분: 3000에서 10000으로 수정
 
         window.addEventListener('resize', function() {
             camera.aspect = window.innerWidth / window.innerHeight;
