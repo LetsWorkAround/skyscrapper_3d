@@ -67,7 +67,9 @@
                     for (let y = 0; y < size; y++) {
                         const cube = new THREE.Mesh(geometry, material);
                         cube.position.set(x - size/2 + 0.5, y - size/2 + 0.5, z - size/2 + 0.5);
-                        cube.scale.y = 0.01; // Start with a very small height
+                        // cube.scale.y = 0.01; // Start with a very small height
+                        cube.scale.y = 0;
+                        
                         cube.visible = false;
                         scene.add(cube);
                         cubes[x][z][y] = cube;
