@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5x5x5 3D Block Stacking (Latin Square)</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, cubes = [];
+        const size = 5;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            const light = new THREE.PointLight(0xffffff, 1, 100);
+            light.position.set(10, 10, 10);
+            scene.add(light);
+
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+
+            for (let x = 0; x < size; x++) {
+                for (let z = 0; z < size; z++) {
+                    cubes[x] = cubes[x] || [];
+                    cubes[x][z] = [];
+                    for (let y = 0; y < size; y++) {
+                        const cube = new THREE.Mesh(geometry, material);
+                        cube.position.set(x - size/2 + 0.5, y - size/2 + 0.5, z - size/2 + 0.5);
+                        cube.visible = false;
+                        scene.add(cube);
+                        cubes[x][z][y] = cube;
+                    }
+                }
+            }
+
+            camera.position.set(7, 7, 7);
+            camera.lookAt(0, 0, 0);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generateLatinSquare() {
+            let square = Array(size).fill().map(() => Array(size).fill(0));
+            let firstRow = shuffleArray([1, 2, 3, 4, 5]);
+            
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    square[i][j] = firstRow[(i + j) % size];
+                }
+            }
+            
+            // Shuffle rows and columns
+            square = shuffleArray(square);
+            square = square[0].map((_, colIndex) => square.map(row => row[colIndex]));
+            
+            return square;
+        }
+
+        function stackBlocks() {
+            const heights = generateLatinSquare();
+            for (let x = 0; x < size; x++) {
+                for (let z = 0; z < size; z++) {
+                    const height = heights[x][z];
+                    for (let y = 0; y < size; y++) {
+                        cubes[x][z][y].visible = y < height;
+                    }
+                }
+            }
+        }
+
+        init();
+        animate();
+        stackBlocks();
+        setInterval(stackBlocks, 3000);
+
+        window.addEventListener('resize', function() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }, false);
+    </script>
+</body>
+</html>
