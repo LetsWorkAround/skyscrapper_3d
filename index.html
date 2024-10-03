@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5x5x5 3D Block Stacking (Latin Square)</title>
+    <title>5x5x5 3D Block Stacking (Pastel Colors)</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -14,6 +14,13 @@
     <script>
         let scene, camera, renderer, cubes = [];
         const size = 5;
+        const pastelColors = [
+            0xFFB3BA, // Light Pink (1층)
+            0xFFDFBA, // Light Peach (2층)
+            0xFFFFBA, // Light Yellow (3층)
+            0xBAFFBA, // Light Mint (4층)
+            0xBAE1FF  // Light Blue (5층)
+        ];
 
         function init() {
             scene = new THREE.Scene();
@@ -27,13 +34,13 @@
             scene.add(light);
 
             const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
 
             for (let x = 0; x < size; x++) {
                 for (let z = 0; z < size; z++) {
                     cubes[x] = cubes[x] || [];
                     cubes[x][z] = [];
                     for (let y = 0; y < size; y++) {
+                        const material = new THREE.MeshPhongMaterial({ color: pastelColors[y] });
                         const cube = new THREE.Mesh(geometry, material);
                         cube.position.set(x - size/2 + 0.5, y - size/2 + 0.5, z - size/2 + 0.5);
                         cube.visible = false;
@@ -70,7 +77,6 @@
                 }
             }
             
-            // Shuffle rows and columns
             square = shuffleArray(square);
             square = square[0].map((_, colIndex) => square.map(row => row[colIndex]));
             
